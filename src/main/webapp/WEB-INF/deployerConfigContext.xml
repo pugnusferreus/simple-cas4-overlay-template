@@ -77,7 +77,8 @@
                    | If more than one instance of the same handler class is configured, you must explicitly
                    | set its name to something other than its default name (typically the simple class name).
                    -->
-                <!--<entry key-ref="proxyAuthenticationHandler" value-ref="proxyPrincipalResolver" />-->
+                <!-- <entry key-ref="proxyAuthenticationHandler" value-ref="proxyPrincipalResolver" /> -->
+                <ref bean="primaryAuthenticationHandler" />
                 <!--<entry key-ref="primaryAuthenticationHandler" value-ref="primaryPrincipalResolver" />-->
                 <ref bean="dbAuthHandler" />
             </list>
@@ -219,4 +220,5 @@
           p:dataSource-ref="dataSource"
           p:passwordEncoder-ref="passwordEncoder"
           p:sql="select password from users where username=? and active='1'" />
+
 </beans>

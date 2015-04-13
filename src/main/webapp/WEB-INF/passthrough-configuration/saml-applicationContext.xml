@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+
+    <aop:aspectj-autoproxy />
+    <context:component-scan base-package="au.edu.esa.passthrough"/>
+    <mvc:annotation-driven />
+
+	<context:annotation-config/>
+
+    <!-- TODO: seperate to a different manager context -->
+
+
+    <bean id="postBindingAdapter" class="au.edu.esa.passthrough.managers.saml.PostBindingAdapter">
+        <constructor-arg value="https://localhost:8443/cas"></constructor-arg>
+        <constructor-arg ref="decoder"/>
+        <constructor-arg ref="securityPolicyResolver"/>
+        <property name="velocityEngine" ref="velocityEngine" />
+    </bean>
+
+    <bean id="redirectBindingAdapter" class="au.edu.esa.passthrough.managers.saml.RedirectBindingAdapter">
+        <constructor-arg value="https://localhost:8443/cas" />
+        <constructor-arg ref="redirectDecoder" />
+        <constructor-arg ref="keyStoreCredentialResolverDelegate" />
+        <constructor-arg>
+            <list>
+                <ref bean="issueInstantRule"/>
+                <ref bean="messageReplayRule"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="samlAuthenticationEntryPoint" class="au.edu.esa.passthrough.controllers.SAMLAuthenticationEntryPoint">
+
+    </bean>
+
+    <bean id="keyStoreCredentialResolverDelegate" class="au.edu.esa.passthrough.managers.saml.KeyStoreCredentialResolverDelegate">
+        <property name="keystorePassword" value="blah" />
+        <!-- <property name="b64EncodedKeystore" value="${saml.keystore.base64_encoded}"/> -->
+
+        <property name="privateKeyPasswordsByAlias">
+            <map>
+                <entry key="thekey" value="blah" />
+            </map>
+        </property>
+
+    </bean>
+
+    <bean id="samlParserPool"  class="org.opensaml.xml.parse.BasicParserPool" >
+        <property name="maxPoolSize" value="2" />
+    </bean>
+
+    <bean id="decoder" class="au.edu.esa.passthrough.managers.saml.ScootleHTTPPostSimpleSignDecoder">
+        <constructor-arg ref="samlParserPool"/>
+    </bean>
+
+    <bean id="redirectDecoder" class="au.edu.esa.passthrough.managers.saml.ScootleHTTPRedirectDeflateDecoder">
+        <constructor-arg ref="samlParserPool"/>
+    </bean>
+
+    <bean id="securityPolicyResolver" class="org.opensaml.ws.security.provider.StaticSecurityPolicyResolver">
+        <constructor-arg ref="securityPolicy"/>
+    </bean>
+
+    <bean id="securityPolicy" class="au.edu.esa.passthrough.managers.saml.SecurityPolicyDelegate">
+        <constructor-arg>
+            <list>
+                <ref bean="signatureSecurityPolicyRule"/>
+                <ref bean="assertionSignatureSecurityPolicyRule"/>
+                <ref bean="issueInstantRule"/>
+                <ref bean="messageReplayRule"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="signatureSecurityPolicyRule" class="au.edu.esa.passthrough.managers.saml.SignatureSecurityPolicyRule">
+        <constructor-arg ref="keyStoreCredentialResolverDelegate"></constructor-arg>
+        <constructor-arg >
+            <bean class="org.opensaml.security.SAMLSignatureProfileValidator"></bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="assertionSignatureSecurityPolicyRule" class="au.edu.esa.passthrough.managers.saml.AssertionSignatureSecurityPolicyRule">
+        <constructor-arg ref="keyStoreCredentialResolverDelegate"></constructor-arg>
+        <constructor-arg >
+            <bean class="org.opensaml.security.SAMLSignatureProfileValidator"></bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="issueInstantRule" class="org.opensaml.common.binding.security.IssueInstantRule">
+        <constructor-arg index="0" value="90"/>
+        <constructor-arg index="1" value="30"/>
+        <property name="requiredRule" value="true"/>
+
+    </bean>
+
+    <bean id="messageReplayRule" class="org.opensaml.common.binding.security.MessageReplayRule">
+        <constructor-arg ref="replayCache"/>
+    </bean>
+
+    <bean id="replayCache" class="org.opensaml.util.storage.ReplayCache">
+        <constructor-arg ref="mapBasedStorageService"/>
+
+        <constructor-arg value="14400000"></constructor-arg>
+    </bean>
+
+    <bean id="mapBasedStorageService" class="org.opensaml.util.storage.MapBasedStorageService"/>
+
+    <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+        <property name="preferFileSystemAccess" value="false"/>
+        <property name="velocityProperties">
+            <props>
+                <prop key="resource.loader">classpath</prop>
+                <prop key="classpath.resource.loader.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
+            </props>
+        </property>
+    </bean>
+
+</beans>
