@@ -33,7 +33,18 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
             </plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <path>/cas</path>
 
+                    <httpsPort>8443</httpsPort>
+
+
+                </configuration>
+            </plugin>
         </plugins>
         <finalName>cas</finalName>
     </build>
@@ -111,6 +122,15 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.0.1</version>
         </dependency>
+        <dependency>
+            <groupId>taglibs</groupId>
+            <artifactId>standard</artifactId>
+            <version>1.1.2</version>
+            <type>jar</type>
+            <scope>runtime</scope>
+        </dependency>
+
+
     </dependencies>
 
     <properties>

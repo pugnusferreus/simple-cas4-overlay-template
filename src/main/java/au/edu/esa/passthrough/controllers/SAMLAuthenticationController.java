@@ -128,6 +128,8 @@ public class SAMLAuthenticationController extends BaseController {
 
 		LOG.info("ticket = [" + ticketId + "]");
 
+		response.sendRedirect("/cas");
+
 	}
 
 
