@@ -78,7 +78,7 @@
                    | set its name to something other than its default name (typically the simple class name).
                    -->
                 <!-- <entry key-ref="proxyAuthenticationHandler" value-ref="proxyPrincipalResolver" /> -->
-                <ref bean="primaryAuthenticationHandler" />
+                <ref bean="samlAuthenticationHandler" />
                 <!--<entry key-ref="primaryAuthenticationHandler" value-ref="primaryPrincipalResolver" />-->
                 <ref bean="dbAuthHandler" />
             </list>
@@ -131,7 +131,8 @@
             </map>
         </property>
     </bean>
-
+    <bean id="samlAuthenticationHandler"
+          class="au.edu.esa.passthrough.handlers.SAMLAuthenticationHandler" />
     <!-- Required for proxy ticket mechanism -->
     <bean id="proxyPrincipalResolver"
           class="org.jasig.cas.authentication.principal.BasicPrincipalResolver" />

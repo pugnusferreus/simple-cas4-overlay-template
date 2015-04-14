@@ -10,16 +10,15 @@ import org.jasig.cas.CentralAuthenticationService;
 import org.jasig.cas.CentralAuthenticationServiceImpl;
 import org.jasig.cas.authentication.*;
 import org.jasig.cas.authentication.principal.*;
+import org.jasig.cas.services.DefaultServicesManagerImpl;
 import org.jasig.cas.services.RegexRegisteredService;
 import org.jasig.cas.services.RegisteredService;
 import org.jasig.cas.services.ServicesManager;
 import org.jasig.cas.support.saml.authentication.principal.SamlService;
-import org.jasig.cas.ticket.ExpirationPolicy;
-import org.jasig.cas.ticket.Ticket;
-import org.jasig.cas.ticket.TicketGrantingTicket;
-import org.jasig.cas.ticket.TicketGrantingTicketImpl;
+import org.jasig.cas.ticket.*;
 import org.jasig.cas.ticket.registry.DefaultTicketRegistry;
 import org.jasig.cas.ticket.support.HardTimeoutExpirationPolicy;
+import org.jasig.cas.web.support.CookieRetrievingCookieGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -34,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+
 
 /**
  * @author blim
@@ -60,7 +60,8 @@ public class SAMLAuthenticationController extends BaseController {
 	private CentralAuthenticationService centralAuthenticationService;
 
 	@Autowired
-	private ServicesManager servicesManager;
+	private CookieRetrievingCookieGenerator ticketGrantingTicketCookieGenerator;
+
 
 
 	@RequestMapping(value="/login", method = RequestMethod.GET)
@@ -100,16 +101,16 @@ public class SAMLAuthenticationController extends BaseController {
 	}
 
 
-	@RequestMapping(value="/consume", method = RequestMethod.GET)
+	@RequestMapping(value="/consume", method = RequestMethod.POST)
 	@ResponseBody
 	public void consume(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		LOG.info("Consuming SAML request!");
-		Map<String, String> x =  new HashMap<>();
-		x.put("benson.lim@esa.edu.au", "123");
-		UsernamePasswordCredential credential = new UsernamePasswordCredential();
-		credential.setUsername("benson.lim@esa.edu.au");
-		credential.setPassword("123");
 
+//		UsernamePasswordCredential credential = new UsernamePasswordCredential();
+//		credential.setUsername("benson.lim@esa.edu.au");
+//		credential.setPassword("123");
+
+		TestCredential credential = new TestCredential("benson.lim@esa.edu.au");
 //		AcceptUsersAuthenticationHandler test = new AcceptUsersAuthenticationHandler();
 //
 //		test.setUsers(x);
@@ -120,17 +121,13 @@ public class SAMLAuthenticationController extends BaseController {
 //		TicketGrantingTicket ticketGrantingTicket = new TicketGrantingTicketImpl("benson.lim@esa.edu.au",authentication, policy);
 //
 //		ticketRegistry.addTicket(ticketGrantingTicket);
-		String ticket = centralAuthenticationService.createTicketGrantingTicket(credential);
+		String ticketId = centralAuthenticationService.createTicketGrantingTicket(credential);
+		Ticket ticket = ticketRegistry.getTicket(ticketId);
 
-		//Service service = new SimpleWebApplicationServiceImpl();
+		ticketGrantingTicketCookieGenerator.addCookie(request, response, ticket.getId());
 
-		LOG.info("ticket = [" + ticket + "]");
-		centralAuthenticationService.grantServiceTicket(ticket, null);
+		LOG.info("ticket = [" + ticketId + "]");
 
-		for(RegisteredService svc : servicesManager.getAllServices()) {
-			LOG.info(svc.getId());
-			LOG.info(svc.getServiceId());
-		}
 	}
 
 
@@ -183,7 +180,7 @@ public class SAMLAuthenticationController extends BaseController {
 	}
 
 	private String getIDPURL(String key) {
-		return "http://localhost:9091/openam/SSOPOST/metaAlias/idp";
+		return "http://scootle-test-multi01.scootle.edu.au:9091/openam/SSOPOST/metaAlias/idp";
 	}
 
 	private RequestMethod getSSOBinding(HttpServletRequest request) {

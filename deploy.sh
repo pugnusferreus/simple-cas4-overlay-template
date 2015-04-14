@@ -5,3 +5,4 @@ mvn clean package
 rm -rf /Users/pugnusferreus/apache-tomcat-7.0.53/webapps/cas
 rm /Users/pugnusferreus/apache-tomcat-7.0.53/webapps/cas.war
 cp target/cas.war /Users/pugnusferreus/apache-tomcat-7.0.53/webapps/
+/Users/pugnusferreus/apache-tomcat-7.0.53/bin/catalina.sh run
